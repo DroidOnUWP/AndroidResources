@@ -1,0 +1,442 @@
+
+project art/
+diff --git a/build/Android.common_build.mk b/build/Android.common_build.mk
+index 2294ddb..a2c90b5 100644
+--- a/build/Android.common_build.mk
++++ b/build/Android.common_build.mk
+@@ -158,6 +158,15 @@ art_clang_cflags += -Wdeprecated
+ # Enable warning for unreachable break & return.
+ art_clang_cflags += -Wunreachable-code-break -Wunreachable-code-return
+ 
++ifdef TARGET_BRIDGE_TLS
++art_clang_cflags += -D_BRIDGE_TLS
++endif    
++
++ifdef TARGET_BRIDGE_SYSCALLS
++art_clang_cflags += -D_BRIDGE_SYSCALLS
++endif    
++
++
+ # Enable missing-noreturn only on non-Mac. As lots of things are not implemented for Apple, it's
+ # a pain.
+ ifneq ($(HOST_OS),darwin)
+diff --git a/build/Android.executable.mk b/build/Android.executable.mk
+index cb6d340..cb2c2e5 100644
+--- a/build/Android.executable.mk
++++ b/build/Android.executable.mk
+@@ -83,6 +83,12 @@ define build-art-executable
+     $(call set-target-local-clang-vars)
+     $(call set-target-local-cflags-vars,$(6))
+     LOCAL_SHARED_LIBRARIES += libdl
++
++    ifdef TARGET_BRIDGE_TLS
++      LOCAL_CFLAGS += -D_BRIDGE_TLS
++	  LOCAL_SHARED_LIBRARIES += libbridge    
++    endif 
++
+   else # host
+     LOCAL_CLANG := $(ART_HOST_CLANG)
+     LOCAL_LDLIBS := $(ART_HOST_LDLIBS)
+diff --git a/compiler/Android.mk b/compiler/Android.mk
+index e9c22d2..f404908 100644
+--- a/compiler/Android.mk
++++ b/compiler/Android.mk
+@@ -292,6 +292,10 @@ $$(ENUM_OPERATOR_OUT_GEN): $$(GENERATED_SRC_DIR)/%_operator_out.cc : $(LOCAL_PAT
+   ifeq ($$(art_target_or_host),target)
+     # For atrace.
+     LOCAL_SHARED_LIBRARIES += libcutils
++	ifdef TARGET_BRIDGE_SYSCALLS
++		LOCAL_SHARED_LIBRARIES += libbridge
++	endif
++
+     include $(BUILD_SHARED_LIBRARY)
+   else # host
+     LOCAL_MULTILIB := both
+diff --git a/runtime/Android.mk b/runtime/Android.mk
+index aa12c83..e05b8e3 100644
+--- a/runtime/Android.mk
++++ b/runtime/Android.mk
+@@ -384,6 +384,11 @@ LIBART_CFLAGS := -DBUILDING_LIBART=1
+ LIBART_TARGET_CFLAGS :=
+ LIBART_HOST_CFLAGS :=
+ 
++ifdef TARGET_BRIDGE_TLS
++LIBART_TARGET_CFLAGS += -D_BRIDGE_TLS
++endif    
++
++
+ # Default dex2oat instruction set features.
+ LIBART_HOST_DEFAULT_INSTRUCTION_SET_FEATURES := default
+ LIBART_TARGET_DEFAULT_INSTRUCTION_SET_FEATURES := default
+@@ -552,6 +557,10 @@ endif
+     LOCAL_SHARED_LIBRARIES += libutils
+     # For liblog, atrace, properties, ashmem, set_sched_policy and socket_peer_is_trusted.
+     LOCAL_SHARED_LIBRARIES += libcutils
++  	ifdef TARGET_BRIDGE_TLS
++		LOCAL_SHARED_LIBRARIES += libbridge
++	endif
++
+   else # host
+     ifeq ($$(art_static_or_shared),static)
+       LOCAL_STATIC_LIBRARIES += libziparchive-host libz
+@@ -571,6 +580,7 @@ endif
+       LOCAL_SHARED_LIBRARIES += libartd
+     endif
+     LOCAL_NOTICE_FILE := $(LOCAL_PATH)/openjdkjvm/NOTICE
++
+   endif
+   LOCAL_ADDITIONAL_DEPENDENCIES := art/build/Android.common_build.mk
+   LOCAL_ADDITIONAL_DEPENDENCIES += $$(LOCAL_PATH)/Android.mk
+
+project bionic/
+diff --git a/libc/Android.mk b/libc/Android.mk
+index 1ca84c1..0057f04 100644
+--- a/libc/Android.mk
++++ b/libc/Android.mk
+@@ -636,6 +636,7 @@ ifeq ($(strip $(DEBUG_BIONIC_LIBC)),true)
+   libc_common_cflags += -DDEBUG
+ endif
+ 
++
+ libc_malloc_src := bionic/jemalloc_wrapper.cpp
+ libc_common_c_includes += external/jemalloc/include
+ 
+@@ -651,6 +652,17 @@ libc_common_cppflags := \
+ libc_common_c_includes += \
+     $(LOCAL_PATH)/stdio   \
+ 
++ifdef TARGET_BRIDGE_TLS
++libc_common_cflags += -D_BRIDGE_TLS
++libc_common_cppflags += -D_BRIDGE_TLS
++endif    
++
++ifdef TARGET_BRIDGE_SYSCALLS
++libc_common_cflags += -D_BRIDGE_SYSCALLS
++libc_common_cppflags += -D_BRIDGE_SYSCALLS
++endif
++
++
+ # ========================================================
+ # Add in the arch or 32-bit specific flags
+ # Must be called with $(eval).
+@@ -1202,11 +1214,17 @@ LOCAL_WHOLE_STATIC_LIBRARIES := \
+     libc_netbsd \
+     libc_openbsd_ndk \
+     libc_stack_protector \
+-    libc_syscalls \
+     libc_tzcode \
+     libm \
+     libjemalloc \
+ 
++ifndef TARGET_BRIDGE_SYSCALLS
++LOCAL_WHOLE_STATIC_LIBRARIES += libc_syscalls
++else
++LOCAL_SRC_FILES += bridge/bridge.cpp
++LOCAL_C_INCLUDES += bridge/include
++endif
++
+ LOCAL_WHOLE_STATIC_LIBRARIES_arm := libc_aeabi
+ LOCAL_CXX_STL := none
+ 
+@@ -1245,9 +1263,15 @@ LOCAL_WHOLE_STATIC_LIBRARIES := \
+     libc_openbsd_ndk \
+     libc_pthread \
+     libc_stack_protector \
+-    libc_syscalls \
+     libc_tzcode \
+ 
++ifndef TARGET_BRIDGE_SYSCALLS
++LOCAL_WHOLE_STATIC_LIBRARIES += libc_syscalls
++else
++LOCAL_SRC_FILES += bridge/bridge.cpp
++LOCAL_C_INCLUDES += bridge/include
++endif
++
+ LOCAL_WHOLE_STATIC_LIBRARIES_arm := libc_aeabi
+ 
+ LOCAL_CXX_STL := none
+@@ -1342,6 +1366,10 @@ LOCAL_CLANG := $(use_clang)
+ LOCAL_ADDITIONAL_DEPENDENCIES := $(libc_common_additional_dependencies)
+ LOCAL_WHOLE_STATIC_LIBRARIES := libc_common libc_init_static libjemalloc
+ 
++ifdef TARGET_BRIDGE_SYSCALLS
++LOCAL_WHOLE_STATIC_LIBRARIES += libbridge
++endif
++
+ LOCAL_CXX_STL := none
+ LOCAL_SYSTEM_SHARED_LIBRARIES :=
+ LOCAL_SANITIZE := never
+@@ -1404,6 +1432,11 @@ LOCAL_PACK_MODULE_RELOCATIONS := false
+ LOCAL_SHARED_LIBRARIES := libdl
+ LOCAL_WHOLE_STATIC_LIBRARIES := libc_common libjemalloc
+ 
++ifdef TARGET_BRIDGE_SYSCALLS
++LOCAL_SHARED_LIBRARIES += libbridge
++endif
++
++
+ LOCAL_CXX_STL := none
+ LOCAL_SYSTEM_SHARED_LIBRARIES :=
+ 
+diff --git a/libc/arch-arm/arm.mk b/libc/arch-arm/arm.mk
+index 76f465e..8d70b18 100644
+--- a/libc/arch-arm/arm.mk
++++ b/libc/arch-arm/arm.mk
+@@ -22,15 +22,19 @@ libc_openbsd_src_files_exclude_arm += \
+ libc_bionic_src_files_arm += \
+     arch-arm/bionic/abort_arm.S \
+     arch-arm/bionic/atomics_arm.c \
+-    arch-arm/bionic/__bionic_clone.S \
+     arch-arm/bionic/_exit_with_stack_teardown.S \
+     arch-arm/bionic/libgcc_compat.c \
+     arch-arm/bionic/popcount_tab.c \
+     arch-arm/bionic/__restore.S \
+     arch-arm/bionic/setjmp.S \
++
++ifndef TARGET_BRIDGE_SYSCALLS
++libc_bionic_src_files_arm += arch-arm/bionic/__bionic_clone.S \
+     arch-arm/bionic/syscall.S \
+     arch-arm/bionic/vfork.S \
+ 
++endif
++
+ libc_arch_static_src_files_arm := arch-arm/bionic/exidx_static.c
+ libc_arch_dynamic_src_files_arm := arch-arm/bionic/exidx_dynamic.c
+ 
+diff --git a/libc/bionic/libc_init_dynamic.cpp b/libc/bionic/libc_init_dynamic.cpp
+index ab48fb8..219ecb6 100644
+--- a/libc/bionic/libc_init_dynamic.cpp
++++ b/libc/bionic/libc_init_dynamic.cpp
+@@ -109,6 +109,12 @@ __noreturn void __libc_init(void* raw_args,
+   exit(slingshot(args.argc, args.argv, args.envp));
+ }
+ 
++extern "C" void __libc_init_tls_bridge(void* raw_args)
++{
++    static KernelArgumentBlock args(raw_args);
++    __libc_init_main_thread(args);
++}
++
+ extern "C" uint32_t android_get_application_target_sdk_version();
+ 
+ uint32_t bionic_get_application_target_sdk_version() {
+diff --git a/libc/include/unistd.h b/libc/include/unistd.h
+index 5045267..9f862b3 100644
+--- a/libc/include/unistd.h
++++ b/libc/include/unistd.h
+@@ -541,6 +541,10 @@ ssize_t readlinkat(int dirfd, const char* path, char* buf, size_t size) {
+ 
+ #endif /* defined(__BIONIC_FORTIFY) */
+ 
++#if defined(_BRIDGE_TLS)
++extern void** _bridge_get_tls();
++#endif
++
+ __END_DECLS
+ 
+ #endif /* _UNISTD_H_ */
+diff --git a/libc/libc.arm.map b/libc/libc.arm.map
+index 38f8437..455e739 100644
+--- a/libc/libc.arm.map
++++ b/libc/libc.arm.map
+@@ -66,6 +66,7 @@ LIBC {
+     __libc_current_sigrtmax;
+     __libc_current_sigrtmin;
+     __libc_init;
++    __libc_init_tls_bridge;
+     __llseek; # arm x86 mips
+     __loc_aton;
+     __loc_ntoa;
+@@ -1265,6 +1266,7 @@ LIBC_N {
+     scandirat64;
+     strchrnul;
+     tmpfile64;
++
+ } LIBC;
+ 
+ LIBC_PRIVATE {
+diff --git a/libc/private/__get_tls.h b/libc/private/__get_tls.h
+index 04c5fdb..513317e 100644
+--- a/libc/private/__get_tls.h
++++ b/libc/private/__get_tls.h
+@@ -29,7 +29,9 @@
+ #ifndef __BIONIC_PRIVATE_GET_TLS_H_
+ #define __BIONIC_PRIVATE_GET_TLS_H_
+ 
+-#if defined(__aarch64__)
++#if defined(_BRIDGE_TLS)
++#define __get_tls() _bridge_get_tls()
++#elif defined(__aarch64__)
+ # define __get_tls() ({ void** __val; __asm__("mrs %0, tpidr_el0" : "=r"(__val)); __val; })
+ #elif defined(__arm__)
+ # define __get_tls() ({ void** __val; __asm__("mrc p15, 0, %0, c13, c0, 3" : "=r"(__val)); __val; })
+diff --git a/libc/private/bionic_tls.h b/libc/private/bionic_tls.h
+index c61e2ff..0a3c5e4 100644
+--- a/libc/private/bionic_tls.h
++++ b/libc/private/bionic_tls.h
+@@ -113,6 +113,11 @@ enum {
+  */
+ #define BIONIC_PTHREAD_KEY_COUNT (BIONIC_PTHREAD_KEY_RESERVED_COUNT + PTHREAD_KEYS_MAX)
+ 
++
++#if defined(_BRIDGE_TLS)
++extern void** _bridge_get_tls();
++#endif
++
+ __END_DECLS
+ 
+ #if defined(__cplusplus)
+diff --git a/linker/Android.mk b/linker/Android.mk
+index 4a4ca5c..737cbd5 100644
+--- a/linker/Android.mk
++++ b/linker/Android.mk
+@@ -65,9 +65,27 @@ LOCAL_ASFLAGS := $(LOCAL_CFLAGS)
+ 
+ LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
+ 
++ifdef TARGET_BRIDGE_SYSCALLS
++LOCAL_SHARED_LIBRARIES := libutils libbase libz liblog libbridge
++LOCAL_STATIC_LIBRARIES := libziparchive libc_common libc_init_static
++LOCAL_LDFLAGS := -Wl,--export-dynamic \
++	-Wl,-Bsymbolic \
++    -Wl,--exclude-libs,ALL
++LOCAL_CFLAGS := \
++    -fno-stack-protector \
++    -Wstrict-overflow=5 \
++    -Wall -Wextra -Wunused -Werror \
++    -I$(LOCAL_PATH)/../libc/
++else
+ LOCAL_STATIC_LIBRARIES := libc_nomalloc libziparchive libutils libbase libz liblog
+-
+ LOCAL_FORCE_STATIC_EXECUTABLE := true
++endif
++
++ifdef TARGET_BRIDGE_TLS
++LOCAL_CFLAGS += -D_BRIDGE_TLS
++LOCAL_CPPFLAGS += -D_BRIDGE_TLS
++endif    
++
+ 
+ LOCAL_MODULE := linker
+ LOCAL_MODULE_STEM_32 := linker
+diff --git a/linker/linker.cpp b/linker/linker.cpp
+index 9dc928e..9d12995 100644
+--- a/linker/linker.cpp
++++ b/linker/linker.cpp
+@@ -4508,3 +4508,12 @@ extern "C" ElfW(Addr) __linker_init(void* raw_args) {
+   // Return the address that the calling assembly stub should jump to.
+   return start_address;
+ }
++
++
++extern "C" void* __linker_bridge_init(...) {
++  solist = get_libdl_info();
++  sonext = get_libdl_info();
++  g_default_namespace.add_soinfo(get_libdl_info());
++
++  return NULL;
++}
+\ No newline at end of file
+
+project bootable/recovery/
+diff --git a/Android.mk b/Android.mk
+index 589bff4..668e1de 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -24,6 +24,7 @@ LOCAL_CFLAGS += -D_XOPEN_SOURCE -D_GNU_SOURCE
+ LOCAL_MODULE := libfusesideload
+ 
+ LOCAL_STATIC_LIBRARIES := libcutils libc libcrypto_static
++
+ include $(BUILD_STATIC_LIBRARY)
+ 
+ include $(CLEAR_VARS)
+@@ -85,6 +86,7 @@ LOCAL_STATIC_LIBRARIES := \
+     libm \
+     libc
+ 
++
+ LOCAL_HAL_STATIC_LIBRARIES := libhealthd
+ 
+ ifeq ($(TARGET_USERIMAGES_USE_EXT4), true)
+
+project build/
+diff --git a/core/dex_preopt_libart.mk b/core/dex_preopt_libart.mk
+index acd4a02..4b94665 100644
+--- a/core/dex_preopt_libart.mk
++++ b/core/dex_preopt_libart.mk
+@@ -49,6 +49,11 @@ LIBART_IMG_TARGET_BASE_ADDRESS := 0x30000000
+ DEX2OAT_XMX := 128m
+ endif
+ 
++ifdef TARGET_BRIDGE_SYSCALLS
++LIBART_IMG_TARGET_BASE_ADDRESS := 0x48000000
++#DEX2OAT_XMX := 128m
++endif
++
+ ########################################################################
+ # The full system boot classpath
+ 
+diff --git a/core/dynamic_binary.mk b/core/dynamic_binary.mk
+index 91fd271..63f1215 100644
+--- a/core/dynamic_binary.mk
++++ b/core/dynamic_binary.mk
+@@ -62,6 +62,11 @@ ifeq ($(LOCAL_MODULE_CLASS),EXECUTABLES)
+   my_pack_module_relocations := false
+ endif
+ 
++ifdef TARGET_BRIDGE_SYSCALLS
++  my_pack_module_relocations := false
++endif
++
++
+ # TODO (dimitry): Relocation packer is not yet available for darwin
+ ifneq ($(HOST_OS),linux)
+   my_pack_module_relocations := false
+diff --git a/target/board/generic/BoardConfig.mk b/target/board/generic/BoardConfig.mk
+index 02c1c88..059ed91 100644
+--- a/target/board/generic/BoardConfig.mk
++++ b/target/board/generic/BoardConfig.mk
+@@ -6,6 +6,7 @@
+ # The generic product target doesn't have any hardware-specific pieces.
+ TARGET_NO_BOOTLOADER := true
+ TARGET_NO_KERNEL := true
++TARGET_NO_RECOVERY := true
+ TARGET_ARCH := arm
+ 
+ # Note: we build the platform images for ARMv7-A _without_ NEON.
+@@ -39,7 +40,7 @@ ifeq ($(HOST_OS),linux)
+ endif
+ 
+ # Build OpenGLES emulation guest and host libraries
+-BUILD_EMULATOR_OPENGL := true
++#BUILD_EMULATOR_OPENGL := true
+ 
+ # Build and enable the OpenGL ES View renderer. When running on the emulator,
+ # the GLES renderer disables itself if host GL acceleration isn't available.
+diff --git a/target/product/AndroidProducts.mk b/target/product/AndroidProducts.mk
+index 69edc72..4bc6daf 100644
+--- a/target/product/AndroidProducts.mk
++++ b/target/product/AndroidProducts.mk
+@@ -51,6 +51,7 @@ PRODUCT_MAKEFILES := \
+     $(LOCAL_DIR)/generic_x86.mk \
+     $(LOCAL_DIR)/generic_mips.mk \
+     $(LOCAL_DIR)/aosp_arm.mk \
++    $(LOCAL_DIR)/bridge_arm.mk \
+     $(LOCAL_DIR)/full.mk \
+     $(LOCAL_DIR)/aosp_x86.mk \
+     $(LOCAL_DIR)/full_x86.mk \
+
+project frameworks/base/
+diff --git a/cmds/app_process/app_main.cpp b/cmds/app_process/app_main.cpp
+index 2e02382..a74e7a5 100644
+--- a/cmds/app_process/app_main.cpp
++++ b/cmds/app_process/app_main.cpp
+@@ -245,6 +245,7 @@ int main(int argc, char* const argv[])
+     ++i;  // Skip unused "parent dir" argument.
+     while (i < argc) {
+         const char* arg = argv[i++];
++        ALOGI("Arg: %s\n", arg);
+         if (strcmp(arg, "--zygote") == 0) {
+             zygote = true;
+             niceName = ZYGOTE_NICE_NAME;

@@ -1,0 +1,8 @@
+[submodule "lib"]
+	path = lib
+	url = https://github.com/DroidOnUWP/AndroidLibs.git
+	branch = 7.1.1
+[submodule "root"]
+	path = root
+	url = https://github.com/DroidOnUWP/AndroidImage.git
+	branch = 7.1.1
