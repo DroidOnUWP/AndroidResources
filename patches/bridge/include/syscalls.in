@@ -1,0 +1,293 @@
+MAKE_WRAPPER(brk, __brk, void*, void*, __addr)
+MAKE_WRAPPER_(exit, _exit, __noreturn void, int, __status)
+MAKE_WRAPPER(mprotect, mprotect, int, const void*, p1, size_t, p2, int, p3)
+MAKE_WRAPPER(acct, acct, int, const char*, __filepath)
+MAKE_WRAPPER(cacheflush, cacheflush, int, long, __addr, long, __nbytes, long, __cache)
+MAKE_WRAPPER(chdir, chdir, int, const char*, __path)
+MAKE_WRAPPER(chroot, chroot, int, const char*, __path)
+MAKE_WRAPPER(dup, dup, int, int, __oldfd)
+MAKE_WRAPPER(dup3, dup3, int, int, __oldfd, int, __newfd, int, __flags)
+MAKE_WRAPPER(execve, execve, int, const char*, __file, char* const*, __argv, char* const*, __envp)
+MAKE_WRAPPER(fchdir, fchdir, int, int, __fd)
+MAKE_WRAPPER(fchown, fchown, int, int, __fd, uid_t, __owner, gid_t, __group)
+MAKE_WRAPPER(fchownat, fchownat, int, int, __dirfd, const char*, __path, uid_t, __owner, gid_t, __group, int, __flags)
+MAKE_WRAPPER(fdatasync, fdatasync, int, int, __fd)
+MAKE_WRAPPER(ftruncate64, ftruncate64, int, int, __fd, off64_t, __length)
+MAKE_WRAPPER(fsync, fsync, int, int, __fd)
+MAKE_WRAPPER(getegid, getegid, gid_t)
+MAKE_WRAPPER(geteuid, geteuid, uid_t)
+MAKE_WRAPPER(getgid, getgid, gid_t)
+MAKE_WRAPPER(getgroups, getgroups, int, int, __size, gid_t*, __list)
+MAKE_WRAPPER(getpgid, getpgid, pid_t, pid_t, __pid)
+MAKE_WRAPPER(getresgid, getresgid, int, gid_t*, __rgid, gid_t*, __egid, gid_t*, __sgid)
+MAKE_WRAPPER(madvise, madvise, int, void*, p1, size_t, p2, int, p3)
+MAKE_WRAPPER(mincore, mincore, int, void*, p1, size_t, p2, unsigned char*, p3)
+MAKE_WRAPPER(msync, msync, int, const void*, p1, size_t, p2, int, p3)
+MAKE_WRAPPER(munlock, munlock, int, const void*, p1,  size_t, p2)
+MAKE_WRAPPER(munmap, munmap, int, void*, p1, size_t, p2)
+MAKE_WRAPPER(pread64, pread64, ssize_t, int, __fd, void*, __buf, size_t, __count, off64_t, __offset)
+MAKE_WRAPPER(pwrite64, pwrite64, ssize_t, int, __fd, const void*, __buf, size_t, __count, off64_t, __offset)
+MAKE_WRAPPER(read, read, ssize_t, int, __fd, void*, __buf, size_t, __count)
+MAKE_WRAPPER(readlinkat, readlinkat, ssize_t, int, __dirfd, const char*, __path, char*, __buf, size_t, __bufsiz)
+MAKE_WRAPPER(write, write, ssize_t, int, __fd, const void*, __buf, size_t, __count)
+
+
+#undef  EXTERN_TYPE
+// some includes can't be used directly, so we need full define including extern "C"
+#define EXTERN_TYPE extern "C"
+
+MAKE_WRAPPER(connect, __connect, int, int, p1, const void*, p2, int, p3)
+MAKE_WRAPPER_(_exit, __exit, __noreturn void, int, p1)
+MAKE_WRAPPER(getcpu, __getcpu, int, unsigned*, p1, unsigned*, p2, void*, p3)
+
+//empty stubs - not used inside libc (only exported), so these must be redirected elsewhere
+MAKE_WRAPPER(close, ___close, int, int, fd)
+MAKE_WRAPPER(clock_nanosleep, ___clock_nanosleep, int, clockid_t, clock_id, int, flags,
+                           const struct timespec*, request,
+                           struct timespec*, remain)
+MAKE_WRAPPER(epoll_pwait, __epoll_pwait, int, int, epfd, struct epoll_event *,events,
+                      int, maxevents, int, timeout,
+                      const sigset_t *,sigmask)
+MAKE_WRAPPER(faccessat, ___faccessat, int, int, dirfd, const char*, pathname, int, mode, int, flags)
+MAKE_WRAPPER(fchmod, ___fchmod, int, int, fildes, mode_t, mode)
+MAKE_WRAPPER(fchmodat, ___fchmodat, int, int, dirfd, const char*, pathname, int, mode, int, flags)
+
+
+MAKE_WRAPPER(fcntl64, __fcntl64, int, int, fd, int, cmd)
+MAKE_WRAPPER(fgetxattr, ___fgetxattr, int, int, fd, const char*, name, void *, value, size_t, size)
+MAKE_WRAPPER(flistxattr, ___flistxattr, int, int, fd, char*, list, size_t, size)
+
+MAKE_WRAPPER(fsetxattr, ___fsetxattr, int, int, fd, const char*, name, const void *, value, size_t, size, int, flags)
+MAKE_WRAPPER(fstatfs64, __fstatfs64, int, int, fd, struct statfs *, buf)
+MAKE_WRAPPER(getcwd, __getcwd, char*, char *, buf, size_t, size)
+MAKE_WRAPPER(getpid, __getpid, int)		
+MAKE_WRAPPER(getpriority, __getpriority, int, int,  which, int, who)
+MAKE_WRAPPER(ioctl, __ioctl, int, int, fd, unsigned long, request)
+MAKE_WRAPPER(llseek, __llseek, int, unsigned int, fd, unsigned long, offset_hifh, unsigned long, offset_low, loff_t *, result, unsigned int, whence)
+MAKE_WRAPPER(mmap2, __mmap2, int, void *, addr, size_t, length, int, prot, int, flags, int, fd, off_t, pgoffset)
+MAKE_WRAPPER(mremap, ___mremap, int, void *, old_address, size_t, old_size, size_t, new_size, int, flags, void*, new_address)	
+
+MAKE_WRAPPER(openat, __openat, int, int, dirfd, const char *,pathname, int, flags, mode_t, mode)	
+MAKE_WRAPPER(ppoll, __ppoll, int, struct pollfd *,fds, unsigned int, nfds,
+        const struct timespec *,timeout_ts, const sigset_t *,sigmask)	
+MAKE_WRAPPER(pselect6, __pselect6, int, int, nfds, fd_set *,readfds, fd_set *,writefds,
+            fd_set *,exceptfds, const struct timespec *,timeout,
+            void *,sigmask)	
+MAKE_WRAPPER(ptrace, __ptrace, long, int, request, pid_t, pid,             void
+				*,addr, void *,data)	
+MAKE_WRAPPER(reboot, __reboot, int, int, magic, int, magic2, int, cmd, void *,arg)	
+MAKE_WRAPPER(rt_sigaction, __rt_sigaction, int, int, signum, const struct sigaction *, act,
+              struct sigaction *,oldact)	
+MAKE_WRAPPER(rt_sigpending, __rt_sigpending, int, sigset_t *,set)
+MAKE_WRAPPER(rt_sigprocmask, __rt_sigprocmask, int, int, how, const sigset_t *,set, sigset_t *,oldset)	
+MAKE_WRAPPER(rt_sigqueueinfo, ___rt_sigqueueinfo, int, pid_t, tgid, int, sig, siginfo_t *,uinfo)	
+
+MAKE_WRAPPER(rt_sigsuspend, __rt_sigsuspend, int, const sigset_t *,mask)
+MAKE_WRAPPER(rt_sigtimedwait, __rt_sigtimedwait, int,const sigset_t *,set, siginfo_t *,info,
+                 const struct timespec *,timeout)	
+MAKE_WRAPPER(set_tid_address, __set_tid_address, long, int *,tidptr)
+MAKE_WRAPPER(get_tls, __get_tls_internal, void**)
+MAKE_WRAPPER(sigaction, __sigaction, int, int, signum, const struct sigaction *,act,
+              struct sigaction *,oldact)
+MAKE_WRAPPER(signalfd4, __signalfd4, int, int, fd, const sigset_t *,mask, size_t, sz, int, flags)
+
+MAKE_WRAPPER(socket, __socket, int, int, socket_family, int, socket_type, int, protocol)
+MAKE_WRAPPER(statfs64, __statfs64, int, const char *,path, struct statfs64 *,buf)
+MAKE_WRAPPER(timer_create, __timer_create, int, clockid_t ,clockid, struct sigevent *,sevp,
+                 timer_t *,timerid)
+MAKE_WRAPPER(timer_delete, __timer_delete, int, timer_t, timerid)
+MAKE_WRAPPER(timer_getoverrun, __timer_getoverrun, int, timer_t, timerid)
+MAKE_WRAPPER(timer_gettime, __timer_gettime, int, timer_t, timerid, struct itimerspec *,curr_value)
+MAKE_WRAPPER(timer_settime, __timer_settime, int, timer_t, timerid, int, flags,
+                  const struct itimerspec *,new_value, struct itimerspec *, old_value)
+MAKE_WRAPPER(waitid, __waitid, int, int, idtype, pid_t, id, siginfo_t *,infop, void*, options)
+MAKE_WRAPPER(Exit, _Exit, int, int, status)
+
+
+MAKE_WRAPPER(bind, bind, int, int, sockfd, const struct sockaddr *,addr,
+         socklen_t, addrlen)
+MAKE_WRAPPER(capget, capget, int, cap_user_header_t, hdrp, cap_user_data_t, datap)
+MAKE_WRAPPER(capset, capset, int, cap_user_header_t, hdrp, const cap_user_data_t, datap)
+MAKE_WRAPPER(clock_getres, clock_getres, int, clockid_t, clk_id, struct timespec *,res)
+MAKE_WRAPPER(clock_settime, clock_settime, int, clockid_t, clk_id, const struct timespec *,tp)
+MAKE_WRAPPER(delete_module, delete_module, int, const char *,name, int, flags)
+MAKE_WRAPPER(epoll_create1, epoll_create1, int, int, flags)
+MAKE_WRAPPER(epoll_ctl, epoll_ctl, int, int, epfd, int, op, int, fd, struct epoll_event *,event)
+MAKE_WRAPPER(eventfd, eventfd, int, unsigned int, initval, int, flags)
+MAKE_WRAPPER(fallocate64, fallocate64, int, int, fd, int, mode, off64_t, offset, off64_t, len)
+MAKE_WRAPPER(flock, flock, int, int, fd, int, operation)
+MAKE_WRAPPER(fremovexattr, fremovexattr, int, int, fd, const char *,name)
+MAKE_WRAPPER(fstat, fstat, int, int, fd, struct stat*, buf)
+MAKE_WRAPPER(fstat64, fstat64, int, int, fd, struct stat64*, buf)
+MAKE_WRAPPER(fstatat, fstatat, int, int, dirfd, const char*, pathname, struct stat*, buf, int, flags)
+MAKE_WRAPPER(fstatat64, fstatat64, int, int, dirfd, const char*, pathname, struct stat64*, buf, int, flags)
+MAKE_WRAPPER(getitimer, getitimer, int, int, which, struct itimerval *,curr_value)
+MAKE_WRAPPER(getpeername, getpeername, int, int, sockfd, struct sockaddr *, addr, socklen_t*, addrlen)
+MAKE_WRAPPER(getppid, getppid, int)
+MAKE_WRAPPER(getresuid, getresuid, int, uid_t*, __ruid, uid_t*, __euid, uid_t*, __suid)
+MAKE_WRAPPER(getrlimit, getrlimit, int, int, resource, struct rlimit *, rlim)
+MAKE_WRAPPER(getrusage, getrusage, int, int, who, struct rusage *, usage)
+MAKE_WRAPPER(getsid, getsid, pid_t, pid_t, __pid)
+MAKE_WRAPPER(getsockname, getsockname, int, int, sockfd, struct sockaddr *, addr, socklen_t *, addrlen)
+MAKE_WRAPPER(getsockopt, getsockopt, int, int, sockfd, int, level, int, optname,
+                      void *, optval, socklen_t *, optlen)
+MAKE_WRAPPER(getuid, getuid, uid_t)
+MAKE_WRAPPER(getxattr, getxattr, ssize_t, const char *, path, const char *, name,
+                        void *, value, size_t, size)
+MAKE_WRAPPER(init_module, init_module, int, void *, module_image, unsigned long, len,
+                       const char *, param_values)
+MAKE_WRAPPER(inotify_add_watch, inotify_add_watch, int, int, fd, const char *, pathname, uint32_t, mask)
+MAKE_WRAPPER(inotify_init1, inotify_init1, int, int, flags)
+MAKE_WRAPPER(inotify_rm_watch, inotify_rm_watch, int, int, fd, int, wd)
+MAKE_WRAPPER(kill, kill, int, pid_t, p1, int, p2)
+MAKE_WRAPPER(klogctl, klogctl, int, int, type, char *, bufp, int, len)
+MAKE_WRAPPER(lgetxattr, lgetxattr, ssize_t, const char *, path, const char *, name,
+                        void *, value, size_t, size)
+MAKE_WRAPPER(linkat, linkat, int, int, __olddirfd, const char*, __oldpath, int, __newdirfd, const char*, __newpath, int, __flags)
+MAKE_WRAPPER(listen, listen, int, int, sockfd, int, backlog)
+MAKE_WRAPPER(listxattr, listxattr, ssize_t, const char *, path, char *, list, size_t, size)
+MAKE_WRAPPER(llistxattr, llistxattr, ssize_t, const char *, path, char *, list, size_t, size)
+MAKE_WRAPPER(lremovexattr, lremovexattr, int, const char *, path, const char *, name)
+MAKE_WRAPPER(lseek, lseek, off_t, int, __fd, off_t, __offset, int, __whence)
+MAKE_WRAPPER(lsetxattr, lsetxattr, int, const char *, path, const char *, name,
+                     const void *, value, size_t, size, int, flags)
+MAKE_WRAPPER(mkdirat, mkdirat, int, int, dirfd, const char*, pathanme, mode_t, mode)
+MAKE_WRAPPER(mknodat, mknodat, int, int, dirfd, const char*, pathanme, mode_t, mode, dev_t, dev)
+MAKE_WRAPPER(mlock, mlock, int, const void*, p1,  size_t, p2)
+MAKE_WRAPPER(mlockall, mlockall, int, int, p1)
+MAKE_WRAPPER(mount, mount, int, const char *, source, const char *, target,
+                 const char *, filesystemtype, unsigned long, mountflags,
+                 const void *, data)
+MAKE_WRAPPER(munlockall, munlockall, int)
+MAKE_WRAPPER(nanosleep, nanosleep, int, const struct timespec *, req, struct timespec *, rem)
+MAKE_WRAPPER(personality, personality, int, unsigned long, persona)
+MAKE_WRAPPER(pipe2, pipe2, int, int*, __pipefd, int, __flags)
+MAKE_WRAPPER(preadv64, __preadv64, int, const struct iovec*, p1, int, p2, long, p3, long, p4)
+MAKE_WRAPPER(pwritev64, __pwritev64, int, const struct iovec*, p1, int, p2, long, p3, long, p4)
+MAKE_WRAPPER(prctl, prctl, int, int, option, unsigned long, arg2, unsigned long, arg3,
+                 unsigned long, arg4, unsigned long, arg5)
+MAKE_WRAPPER(prlimit64, prlimit64, int, pid_t, pid, int, resource, const struct rlimit *, new_limit,
+                   struct rlimit *, old_limit)
+MAKE_WRAPPER(process_vm_readv, process_vm_readv, ssize_t,
+								pid_t, pid,
+                                const struct iovec *, local_iov,
+                                unsigned long, liovcnt,
+                                const struct iovec *, remote_iov,
+                                unsigned long, riovcnt,
+                                unsigned long, flags)
+MAKE_WRAPPER(process_vm_writev, process_vm_writev, ssize_t,
+								pid_t, pid,
+                                const struct iovec *, local_iov,
+                                unsigned long, liovcnt,
+                                const struct iovec *, remote_iov,
+                                unsigned long, riovcnt,
+                                unsigned long, flags)
+MAKE_WRAPPER(readahead, readahead, ssize_t, int, fd, off64_t, offset, size_t, count)
+MAKE_WRAPPER(readv, readv, ssize_t, int, fd, const struct iovec *, iov, int, iovcnt)
+MAKE_WRAPPER(recvfrom, recvfrom, ssize_t, int, sockfd, void *, buf, size_t, len, int, flags,
+                        struct sockaddr *, src_addr, socklen_t *, addrlen)
+MAKE_WRAPPER(recvmmsg, recvmmsg, int, int, sockfd, struct mmsghdr *, msgvec, unsigned int, vlen,
+                    unsigned int, flags, struct timespec *, timeout)
+MAKE_WRAPPER(recvmsg, recvmsg, ssize_t, int, sockfd, struct msghdr *, msg, int, flags)
+MAKE_WRAPPER(removexattr, removexattr, int, const char *, path, const char *, name)
+MAKE_WRAPPER(renameat, renameat, int, int, olddirfd, const char *, oldpath,
+                    int, newdirfd, const char *, newpath)
+MAKE_WRAPPER(sched_get_priority_max, sched_get_priority_max, int, int, policy)
+MAKE_WRAPPER(sched_get_priority_min, sched_get_priority_min, int, int, policy)
+MAKE_WRAPPER(sched_getparam, sched_getparam, int, pid_t, pid, struct sched_param *, param)
+MAKE_WRAPPER(sched_getscheduler, sched_getscheduler, int, pid_t, pid)
+MAKE_WRAPPER(sched_rr_get_interval, sched_rr_get_interval, int, pid_t, pid, struct timespec *, tp)
+MAKE_WRAPPER(sched_getaffinity, __sched_getaffinity, int, pid_t, pid, size_t, cpusetsize,
+                      void *,mask)
+MAKE_WRAPPER(sched_setaffinity, sched_setaffinity, int, pid_t, pid, size_t, cpusetsize,
+                             const void *, mask)
+MAKE_WRAPPER(sched_setparam, sched_setparam, int, pid_t, pid, const struct sched_param *, param)
+MAKE_WRAPPER(sched_setscheduler, sched_setscheduler, int, pid_t, pid, int, policy,
+                              const struct sched_param *, param)
+MAKE_WRAPPER(sched_yield, sched_yield, int)
+MAKE_WRAPPER(sendfile, sendfile, ssize_t, int, out_fd, int, in_fd, off_t *, offset, size_t, count)
+MAKE_WRAPPER(sendfile64, sendfile64, ssize_t, int, out_fd, int, in_fd, off64_t *, offset, size_t, count)
+MAKE_WRAPPER(sendmmsg, sendmmsg, int, int, sockfd, struct mmsghdr *, msgvec, unsigned int, vlen,
+                    unsigned int, flags)
+MAKE_WRAPPER(sendmsg, sendmsg, ssize_t, int, sockfd, const struct msghdr *, msg, int, flags)
+MAKE_WRAPPER(sendto, sendto, ssize_t, int, sockfd, const void *, buf, size_t, len, int, flags,
+                      const struct sockaddr *, dest_addr, socklen_t, addrlen)
+MAKE_WRAPPER(setfsgid, setfsgid, int, uid_t, fsgid)
+MAKE_WRAPPER(setfsuid, setfsuid, int, uid_t, fsuid)
+MAKE_WRAPPER(setgid, setgid, int, gid_t, __gid)
+MAKE_WRAPPER(setgroups, setgroups, int, size_t, __size, const gid_t*, __list)
+MAKE_WRAPPER(sethostname, sethostname, int, const char*, __name, size_t, __len)
+MAKE_WRAPPER(setitimer	, setitimer, int, int, which, const struct itimerval *, new_value,
+                     struct itimerval *, old_value)
+MAKE_WRAPPER(setns, setns, int, int, fd, int, nstype)
+MAKE_WRAPPER(setpgid, setpgid, int, pid_t, __pid, pid_t, __pgid)
+MAKE_WRAPPER(setpriority, setpriority, int, int, which, id_t, who, int, prio)
+MAKE_WRAPPER(setregid, setregid, int, gid_t, __rgid, gid_t, __egid)
+MAKE_WRAPPER(setresgid, setresgid, int, gid_t, __rgid, gid_t, __egid, gid_t, __sgid)
+MAKE_WRAPPER(setresuid, setresuid, int, uid_t, __ruid, uid_t, __euid, uid_t, __suid)
+MAKE_WRAPPER(setreuid, setreuid, int, uid_t, __ruid, uid_t, __euid)
+MAKE_WRAPPER(setrlimit, setrlimit, int, int, resource, const struct rlimit *, rlim)
+MAKE_WRAPPER(setsid, setsid, pid_t)
+MAKE_WRAPPER(setsockopt, setsockopt, int, int, sockfd, int, level, int, optname,
+                      const void *, optval, socklen_t, optlen)
+MAKE_WRAPPER(settimeofday, settimeofday, int, const struct timeval *, tv, const struct timezone *, tz)
+MAKE_WRAPPER(setuid, setuid, int, uid_t, __uid)
+MAKE_WRAPPER(setxattr, setxattr, int, const char *, path, const char *, name,
+                     const void *, value, size_t, size, int, flags)
+MAKE_WRAPPER(shutdown, shutdown, int, int, sockfd, int, how)
+MAKE_WRAPPER(sigaltstack, sigaltstack, int, const stack_t*, p1, stack_t*, p2)
+MAKE_WRAPPER(socketpair, socketpair, int, int, domain, int, type, int, protocol, int*, sv)
+MAKE_WRAPPER(splice, splice, ssize_t, int, fd_in, loff_t *, off_in, int, fd_out,
+                      loff_t *, off_out, size_t, len, unsigned int, flags)
+MAKE_WRAPPER(swapoff, swapoff, int, const char *, path)
+MAKE_WRAPPER(swapon, swapon, int, const char *, path, int, swapflags)
+MAKE_WRAPPER(symlinkat, symlinkat, int, const char*, __oldpath, int, __newdirfd, const char*, __newpath)
+MAKE_WRAPPER(sync, sync, int)
+MAKE_WRAPPER(sysinfo, sysinfo, int, struct sysinfo *, info)
+MAKE_WRAPPER(tee, tee, ssize_t, int, fd_in, int, fd_out, size_t, len, unsigned int, flags)
+MAKE_WRAPPER(tgkill, tgkill, int, int, tgid, int, tid, int, sig)
+MAKE_WRAPPER(timerfd_create, timerfd_create, int, int, clockid, int, flags)
+MAKE_WRAPPER(timerfd_gettime, timerfd_gettime, int, int, fd, struct itimerspec *, curr_value)
+MAKE_WRAPPER(timerfd_settime, timerfd_settime, int, int, fd, int, flags,
+                           const struct itimerspec *, new_value,
+                           struct itimerspec *, old_value)
+MAKE_WRAPPER(times, times, clock_t, struct tms *, buf)
+MAKE_WRAPPER(truncate, truncate, int, const char*, __path, off_t, __length)
+MAKE_WRAPPER(truncate64, truncate64, int, const char*, __path, off64_t, __length)
+MAKE_WRAPPER(umask, umask, mode_t, mode_t, mask)
+MAKE_WRAPPER(umount2, umount2, int, const char *, target, int, flags)
+MAKE_WRAPPER(uname, uname, int, struct utsname *, buf)
+MAKE_WRAPPER(unlinkat, unlinkat, int, int, __dirfd, const char*, __path, int, __flags)
+MAKE_WRAPPER(unshare, unshare, int, int, flags)
+MAKE_WRAPPER(utimensat, utimensat, int, int, dirfd, const char *, pathname,
+                     const struct timespec*, times, int, flags)
+MAKE_WRAPPER(vmsplice, vmsplice, ssize_t, int, fd, const struct iovec *, iov,
+                        unsigned long, nr_segs, unsigned int, flags)
+MAKE_WRAPPER(wait4, wait4, pid_t, pid_t, pid, int *, wstatus, int, options,
+                   struct rusage *, rusage)
+MAKE_WRAPPER(writev, writev, int, int, fildes, const struct iovec *, iov, int, iovcnt)
+
+MAKE_WRAPPER(adjtimex, adjtimex, int, struct timex *, buf)
+MAKE_WRAPPER(clock_adjtime, clock_adjtime, int, clockid_t, id, struct timex *, tx)
+MAKE_WRAPPER(accept4, __accept4, int, int, sockfd, struct sockaddr *, addr,
+                   socklen_t *, addrlen, int, flags)
+MAKE_WRAPPER(getdents64, __getdents64, int, unsigned int, fd, struct linux_dirent64 *, dirp,
+                    unsigned int, count)
+MAKE_WRAPPER(set_tls, __set_tls, int, void*, tls)
+MAKE_WRAPPER(vfork, vfork, pid_t)
+
+#if defined(__arm__)
+MAKE_WRAPPER(gettimeofday, gettimeofday, int)
+MAKE_WRAPPER(clock_gettime, clock_gettime, int)
+MAKE_WRAPPER(arm_fadvise64_64, __arm_fadvise64_64, long, int, fd, int, advice,
+                      loff_t, offset, loff_t, len)
+#endif
+
+
+#if defined(__i386__)
+//X86
+MAKE_WRAPPER(fadvise64, __fadvise64, int, int, fd, off64_t, offset, off64_t, len, int, advice)
+MAKE_WRAPPER(gettimeofday_x86, __gettimeofday, int, struct timeval *, tv, struct timezone *, tz)
+MAKE_WRAPPER(clock_gettime_x86, __clock_gettime, int, clockid_t, clk_id, struct timespec *,tp)
+MAKE_WRAPPER(set_thread_area, __set_thread_area, int, void*, u_info)
+#endif
